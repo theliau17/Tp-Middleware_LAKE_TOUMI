@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"middleware/example/internal/helpers"
 	"middleware/example/internal/models"
 	"middleware/example/internal/services/resource"
 )
@@ -51,6 +52,12 @@ func CreateResource(svc resource.Service) http.HandlerFunc {
 			json.NewEncoder(w).Encode(models.APIError{Message: "Invalid JSON format"})
 			return
 		}
+
+		// Si file_path est vide, on lui assigne l’URL par défaut
+		if res.FilePath == "" {
+			res.FilePath = helpers.DefaultICSURL
+		}
+
 		if err := svc.CreateResource(&res); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(models.APIError{Message: "Unable to create resource"})
