@@ -5,66 +5,82 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/mattn/go-sqlite3"
 
-	// Timetable
+	// Timetable API
 	"middleware/example/internal/controllers/timetable"
 	timetableSvc "middleware/example/internal/services/timetable"
 
-	// Config (Resources)
-	configCtrlResource "middleware/example/internal/controllers/config"
-	configRepoResource "middleware/example/internal/repositories/resource"
-	configSvcResource "middleware/example/internal/services/resource"
-
-	// Helpers
+	// Helpers (DB, NATS)
 	"middleware/example/internal/helpers"
+
+	// Consumer
+	"middleware/example/internal/consumer"
 )
 
-func main() {
-	// PARTIE TIMETABLE
+func runAPI() {
+	// Définir le chemin ICS (avec valeur par défaut)
 	icsPath := os.Getenv("ICS_FILE_PATH")
 	if icsPath == "" {
 		icsPath = "data/timetable.ics"
 	}
 	timetableService := timetableSvc.NewService(icsPath)
 
-	// PARTIE CONFIG (DB + CRUD)
+	// Ouvrir la base de données et initialiser le schéma
 	db, err := helpers.OpenDB("file:collections.db")
 	if err != nil {
-		log.Fatalf("Error opening DB: %v", err)
+		log.Fatalf("Erreur lors de l'ouverture de la base de données : %v", err)
 	}
 	defer db.Close()
 
 	if err := helpers.InitSchema(db); err != nil {
-		log.Fatalf("Error initializing schema: %v", err)
+		log.Fatalf("Erreur lors de l'initialisation du schéma : %v", err)
 	}
 
-	resourceRepo := configRepoResource.NewRepository(db)
-	resourceService := configSvcResource.NewService(resourceRepo)
-
+	// Configurer les routes HTTP
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	// Routes Timetable
+	// Route pour récupérer les événements (Timetable API)
 	r.Get("/events", timetable.GetEvents(timetableService))
 
-	// Routes Config (resources)
-	r.Route("/resources", func(r chi.Router) {
-		r.Get("/", configCtrlResource.GetResources(resourceService))
-		r.Get("/{id}", configCtrlResource.GetResource(resourceService))
-		r.Post("/", configCtrlResource.CreateResource(resourceService))
-		r.Put("/{id}", configCtrlResource.UpdateResource(resourceService))
-		r.Delete("/{id}", configCtrlResource.DeleteResource(resourceService))
-	})
-
-	// Lancement du serveur
+	// Lancer le serveur HTTP
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Printf("Server running on :%s\n", port)
+	fmt.Printf("API server running on :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
+}
+
+func runConsumer() {
+	// Démarrer le consumer NATS (qui va récupérer et traiter les événements)
+	if err := consumer.StartConsumer(); err != nil {
+		log.Fatalf("Erreur lors du démarrage du consumer : %v", err)
+	}
+}
+
+func main() {
+	// Initialiser la connexion NATS
+	helpers.InitNats()
+
+	// Exécuter le consumer et l'API en parallèle
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		runConsumer()
+	}()
+
+	go func() {
+		defer wg.Done()
+		runAPI()
+	}()
+
+	wg.Wait()
 }
