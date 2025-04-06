@@ -53,7 +53,6 @@ func CreateResource(svc resource.Service) http.HandlerFunc {
 			return
 		}
 
-		// Si file_path est vide, on lui assigne l’URL par défaut
 		if res.FilePath == "" {
 			res.FilePath = helpers.DefaultICSURL
 		}
@@ -83,7 +82,6 @@ func UpdateResource(svc resource.Service) http.HandlerFunc {
 			json.NewEncoder(w).Encode(models.APIError{Message: "Invalid JSON format"})
 			return
 		}
-		// on force l'ID depuis l'URL
 		res.ID = id
 		if err := svc.UpdateResource(&res); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

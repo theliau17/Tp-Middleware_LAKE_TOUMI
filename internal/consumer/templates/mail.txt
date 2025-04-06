@@ -1,0 +1,7 @@
+---
+subject: EDU Middleware - Événement modifié
+---
+Bonjour,
+
+L'événement {{ .EventName }} (UID: {{ .UID }}) a été modifié.
+Veuillez consulter les détails sur la plateforme.

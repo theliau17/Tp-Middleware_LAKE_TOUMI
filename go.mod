@@ -5,14 +5,19 @@ go 1.23.0
 toolchain go1.23.5
 
 require (
+	github.com/adrg/frontmatter v0.2.0
 	github.com/arran4/golang-ical v0.3.2
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/nats-io/nats.go v1.41.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/swag v1.16.2
+	github.com/zhashkevych/scheduler v1.0.0
 )
 
 require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
@@ -23,12 +28,8 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
-	github.com/nats-io/jetstream v0.0.19 // indirect
-	github.com/nats-io/nats.go v1.41.0 // indirect
 	github.com/nats-io/nkeys v0.4.10 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/zhashkevych/scheduler v1.0.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
